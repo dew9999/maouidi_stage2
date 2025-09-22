@@ -1,13 +1,11 @@
-// lib/home_page/home_page_widget.dart
+// lib/ui/home_page/home_page_widget.dart
 
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '/backend/supabase/supabase.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-
 import 'home_page_model.dart';
 export 'home_page_model.dart';
 
@@ -25,8 +23,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   late HomePageModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  Timer? _debounce;
-
   @override
   void initState() {
     super.initState();
@@ -38,7 +34,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   @override
   void dispose() {
     _model.dispose();
-    _debounce?.cancel();
     super.dispose();
   }
 
@@ -77,18 +72,18 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     controller: _model.textController,
                     focusNode: _model.textFieldFocusNode,
                     obscureText: false,
-                    onChanged: (value) {
-                      if (_debounce?.isActive ?? false) _debounce!.cancel();
-                      _debounce = Timer(const Duration(milliseconds: 500), () {
-                        if (value.trim().isNotEmpty) {
-                          context.pushNamed(
-                            'SearchResultsPage',
-                            queryParameters:
-                                {'searchTerm': value.trim()}.withoutNulls,
-                          );
-                        }
-                      });
+                    // --- MODIFIED: Changed from onChanged to onFieldSubmitted ---
+                    onFieldSubmitted: (value) {
+                      final searchTerm = value.trim();
+                      if (searchTerm.isNotEmpty) {
+                        context.pushNamed(
+                          'SearchResultsPage',
+                          queryParameters:
+                              {'searchTerm': searchTerm}.withoutNulls,
+                        );
+                      }
                     },
+                    // --------------------------------------------------------
                     decoration: InputDecoration(
                       labelText: 'Search by name...',
                       labelStyle: theme.labelMedium,
@@ -153,14 +148,11 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                         onTap: () => context.pushNamed('PartnerListPage',
                             queryParameters: {'categoryName': 'Clinics'}),
                       ),
-                      // --- MODIFIED: Changed "Nurses" to "Homecare" ---
                       _CategoryCard(
-                        icon: FontAwesomeIcons.briefcaseMedical, // Changed icon
-                        label: 'Homecare', // Changed label
+                        icon: FontAwesomeIcons.briefcaseMedical,
+                        label: 'Homecare',
                         onTap: () => context.pushNamed('PartnerListPage',
-                            queryParameters: {
-                              'categoryName': 'Homecare'
-                            }), // Changed parameter
+                            queryParameters: {'categoryName': 'Homecare'}),
                       ),
                       _CategoryCard(
                         icon: FontAwesomeIcons.handHoldingHeart,

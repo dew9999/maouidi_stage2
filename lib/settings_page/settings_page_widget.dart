@@ -29,13 +29,9 @@ class SettingsPageWidget extends StatefulWidget {
 }
 
 class _SettingsPageWidgetState extends State<SettingsPageWidget> {
-  // --- DELETED: The Future and fetch method are no longer needed ---
-
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
-
-    // --- MODIFIED: Read the user role directly from the AppStateNotifier ---
     final userRole = AppStateNotifier.instance.userRole;
 
     return Scaffold(
@@ -48,11 +44,8 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
             style: theme.headlineMedium.override(fontFamily: 'Inter')),
         centerTitle: true,
       ),
-      // --- MODIFIED: Removed the FutureBuilder ---
       body: userRole == null
-          ? const Center(
-              child:
-                  CircularProgressIndicator()) // Show loading if role isn't ready
+          ? const Center(child: CircularProgressIndicator())
           : userRole == 'Medical Partner'
               ? _PartnerSettingsView()
               : _PatientSettingsView(),
@@ -61,12 +54,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
 }
 
 // =====================================================================
-// The rest of the file (_PatientSettingsView, _PartnerSettingsView, etc.)
-// remains exactly the same. Only the _SettingsPageWidgetState was modified.
-// =====================================================================
-
-// =====================================================================
-//                       PATIENT SETTINGS VIEW
+//                       PATIENT SETTINGS VIEW (RESTORED)
 // =====================================================================
 
 class _PatientSettingsView extends StatefulWidget {
@@ -159,6 +147,7 @@ class _PatientSettingsViewState extends State<_PatientSettingsView> {
               ),
             ],
           ),
+          // --- RESTORED SECTIONS ---
           SettingsGroup(
             title: 'General',
             children: [
@@ -238,15 +227,14 @@ class _PatientSettingsViewState extends State<_PatientSettingsView> {
               ),
             ],
           ),
+          // --------------------------
           Padding(
             padding: const EdgeInsets.all(24.0),
             child: FFButtonWidget(
               onPressed: () async {
                 await authManager.signOut();
-                AppStateNotifier.instance.clearRedirectLocation();
-                await Future.delayed(const Duration(milliseconds: 50));
                 if (context.mounted) {
-                  GoRouter.of(context).go(WelcomeScreenWidget.routePath);
+                  context.go(WelcomeScreenWidget.routePath);
                 }
               },
               text: 'Log Out',
@@ -263,10 +251,7 @@ class _PatientSettingsViewState extends State<_PatientSettingsView> {
     );
   }
 }
-
-// =====================================================================
-//                       PARTNER SETTINGS VIEW
-// =====================================================================
+// ... (The rest of the file, including _PartnerSettingsView, remains the same)
 
 class _PartnerSettingsView extends StatefulWidget {
   @override
@@ -651,10 +636,8 @@ class _PartnerSettingsViewState extends State<_PartnerSettingsView> {
             child: FFButtonWidget(
               onPressed: () async {
                 await authManager.signOut();
-                AppStateNotifier.instance.clearRedirectLocation();
-                await Future.delayed(const Duration(milliseconds: 50));
                 if (context.mounted) {
-                  GoRouter.of(context).go(WelcomeScreenWidget.routePath);
+                  context.go(WelcomeScreenWidget.routePath);
                 }
               },
               text: 'Log Out',
@@ -671,9 +654,7 @@ class _PartnerSettingsViewState extends State<_PartnerSettingsView> {
   }
 }
 
-// =====================================================================
-//                       HELPER WIDGETS & DIALOGS
-// =====================================================================
+// ... (The rest of the helper widgets like _WorkingHoursEditor remain the same) ...
 
 class _WorkingHoursEditor extends StatefulWidget {
   final Map<String, List<String>> initialHours;
@@ -807,23 +788,30 @@ class _WorkingHoursEditorState extends State<_WorkingHoursEditor> {
                               vertical: 4, horizontal: 8),
                           margin: const EdgeInsets.only(bottom: 8),
                           decoration: BoxDecoration(
-                            color: FlutterFlowTheme.of(context).primaryBackground,
+                            color:
+                                FlutterFlowTheme.of(context).primaryBackground,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(timeSlot, style: FlutterFlowTheme.of(context).bodyMedium),
+                              Text(timeSlot,
+                                  style:
+                                      FlutterFlowTheme.of(context).bodyMedium),
                               Row(
                                 children: [
                                   IconButton(
                                       icon: Icon(Icons.edit,
-                                          size: 20, color: FlutterFlowTheme.of(context).secondaryText),
+                                          size: 20,
+                                          color: FlutterFlowTheme.of(context)
+                                              .secondaryText),
                                       onPressed: () =>
                                           _editTimeSlot(context, dayKey, idx)),
                                   IconButton(
                                       icon: Icon(Icons.delete_outline,
-                                          size: 20, color: FlutterFlowTheme.of(context).error),
+                                          size: 20,
+                                          color: FlutterFlowTheme.of(context)
+                                              .error),
                                       onPressed: () {
                                         setState(() {
                                           _hours[dayKey]!.removeAt(idx);
@@ -843,7 +831,8 @@ class _WorkingHoursEditorState extends State<_WorkingHoursEditor> {
                         width: double.infinity,
                         child: OutlinedButton.icon(
                           style: OutlinedButton.styleFrom(
-                              foregroundColor: FlutterFlowTheme.of(context).primary),
+                              foregroundColor:
+                                  FlutterFlowTheme.of(context).primary),
                           icon: const Icon(Icons.add),
                           label: const Text('Add Time Slot'),
                           onPressed: () => _addTimeSlot(context, dayKey),
@@ -1098,11 +1087,7 @@ void _showDeleteAccountDialog(BuildContext context) {
               await Supabase.instance.client.rpc('delete_user_account');
               await authManager.signOut();
               if (context.mounted) {
-                AppStateNotifier.instance.clearRedirectLocation();
-                await Future.delayed(const Duration(milliseconds: 50));
-                if (context.mounted) {
-                  GoRouter.of(context).go(WelcomeScreenWidget.routePath);
-                }
+                context.go(WelcomeScreenWidget.routePath);
               }
             } catch (e) {
               if (context.mounted) {
@@ -1136,7 +1121,9 @@ class _ContactRow extends StatelessWidget {
         children: [
           Icon(icon, color: FlutterFlowTheme.of(context).primary, size: 20),
           const SizedBox(width: 12),
-          Expanded(child: SelectableText(text, style: FlutterFlowTheme.of(context).bodyMedium)),
+          Expanded(
+              child: SelectableText(text,
+                  style: FlutterFlowTheme.of(context).bodyMedium)),
         ],
       ),
     );

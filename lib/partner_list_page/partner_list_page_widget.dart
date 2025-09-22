@@ -8,6 +8,7 @@ import 'package:maouidi/flutter_flow/flutter_flow_drop_down.dart';
 import 'package:maouidi/flutter_flow/flutter_flow_theme.dart';
 import 'package:maouidi/flutter_flow/flutter_flow_util.dart';
 import 'package:maouidi/flutter_flow/form_field_controller.dart';
+import 'package:maouidi/partner_dashboard_page/components/dashboard_helpers.dart';
 import 'partner_list_page_model.dart';
 export 'partner_list_page_model.dart';
 
@@ -35,6 +36,9 @@ class _PartnerListPageWidgetState extends State<PartnerListPageWidget> {
   late FormFieldController<String> _stateValueController;
   late FormFieldController<String> _specialtyValueController;
 
+  // --- NEW: For fetching specialties ---
+  late Future<List<String>> _specialtiesFuture;
+
   @override
   void initState() {
     super.initState();
@@ -42,8 +46,22 @@ class _PartnerListPageWidgetState extends State<PartnerListPageWidget> {
 
     _stateValueController = FormFieldController<String>(null);
     _specialtyValueController = FormFieldController<String>(null);
-
+    _specialtiesFuture = _fetchSpecialties(); // Fetch specialties on init
     _triggerSearch();
+  }
+
+  // --- NEW: Function to fetch specialties from the database ---
+  Future<List<String>> _fetchSpecialties() async {
+    try {
+      final response =
+          await Supabase.instance.client.rpc('get_all_specialties');
+      return (response as List)
+          .map((item) => item['specialty'] as String)
+          .toList();
+    } catch (e) {
+      debugPrint('Error fetching specialties: $e');
+      return []; // Return empty list on error
+    }
   }
 
   Future<void> _triggerSearch() async {
@@ -71,9 +89,8 @@ class _PartnerListPageWidgetState extends State<PartnerListPageWidget> {
     } catch (e) {
       debugPrint('Error fetching partners: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load partners: ${e.toString()}')),
-        );
+        showErrorSnackbar(context,
+            'Failed to load partners. Please check your internet connection and try again.');
       }
     } finally {
       if (mounted) {
@@ -101,9 +118,6 @@ class _PartnerListPageWidgetState extends State<PartnerListPageWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
-
-    // --- DELETED: The local 'wilayas' list is now removed ---
-
     final showSpecialtyFilter =
         widget.categoryName != 'Clinics' && widget.categoryName != 'Charities';
     final bool isFilterActive = _stateValueController.value != null ||
@@ -142,7 +156,6 @@ class _PartnerListPageWidgetState extends State<PartnerListPageWidget> {
                     Expanded(
                       child: FlutterFlowDropDown<String>(
                         controller: _stateValueController,
-                        // --- MODIFIED: Use the centralized 'algerianStates' list ---
                         options: const ['All States', ...algerianStates],
                         onChanged: (val) {
                           setState(() => _stateValueController.value =
@@ -162,26 +175,35 @@ class _PartnerListPageWidgetState extends State<PartnerListPageWidget> {
                     ),
                     if (showSpecialtyFilter)
                       Expanded(
-                        child: FlutterFlowDropDown<String>(
-                          controller: _specialtyValueController,
-                          options: const [
-                            'All Specialties',
-                            ...medicalSpecialties
-                          ],
-                          onChanged: (val) {
-                            setState(() => _specialtyValueController.value =
-                                val == 'All Specialties' ? null : val);
-                            _triggerSearch();
+                        // --- MODIFIED: Use a FutureBuilder for specialties ---
+                        child: FutureBuilder<List<String>>(
+                          future: _specialtiesFuture,
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData) {
+                              return const Center(
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2));
+                            }
+                            final specialties = snapshot.data!;
+                            return FlutterFlowDropDown<String>(
+                              controller: _specialtyValueController,
+                              options: ['All Specialties', ...specialties],
+                              onChanged: (val) {
+                                setState(() => _specialtyValueController.value =
+                                    val == 'All Specialties' ? null : val);
+                                _triggerSearch();
+                              },
+                              textStyle: theme.bodyMedium,
+                              hintText: 'Filter by Specialty',
+                              fillColor: theme.primaryBackground,
+                              elevation: 2,
+                              borderColor: theme.alternate,
+                              borderWidth: 1,
+                              borderRadius: 8,
+                              margin: const EdgeInsets.symmetric(horizontal: 6),
+                              hidesUnderline: true,
+                            );
                           },
-                          textStyle: theme.bodyMedium,
-                          hintText: 'Filter by Specialty',
-                          fillColor: theme.primaryBackground,
-                          elevation: 2,
-                          borderColor: theme.alternate,
-                          borderWidth: 1,
-                          borderRadius: 8,
-                          margin: const EdgeInsets.symmetric(horizontal: 6),
-                          hidesUnderline: true,
                         ),
                       ),
                   ],

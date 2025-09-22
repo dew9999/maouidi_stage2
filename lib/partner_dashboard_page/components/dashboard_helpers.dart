@@ -36,7 +36,7 @@ Future<bool> showStyledConfirmationDialog({
   return result ?? false;
 }
 
-// This function shows a red error snackbar
+// Reusable function for user-friendly error messages
 void showErrorSnackbar(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
     content: Text(message),

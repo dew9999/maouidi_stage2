@@ -14,16 +14,34 @@ import 'flutter_flow/internationalization.dart';
 import 'services/notification_service.dart';
 import 'flutter_flow/nav/nav.dart';
 
+// --- ADDED IMPORTS ---
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart'; // Import OneSignal
+// --------------------
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   GoRouter.optionURLReflectsImperativeAPIs = true;
   usePathUrlStrategy();
 
-  await SupaFlow.initialize();
+  await dotenv.load(fileName: ".env");
+
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+    authOptions: const FlutterAuthClientOptions(
+      authFlowType: AuthFlowType.pkce,
+    ),
+  );
+
   await FlutterFlowTheme.initialize();
 
   if (!kIsWeb) {
     await NotificationService().initialize();
+    // --- FIX: Request notification permission on startup ---
+    OneSignal.Notifications.requestPermission(true);
+    // ----------------------------------------------------
   }
 
   runApp(const MyApp());
@@ -84,8 +102,6 @@ class _MyAppState extends State<MyApp> {
           _appStateNotifier.updateUserRole(null);
         }
       });
-
-    
 
     Future.delayed(
       const Duration(milliseconds: 1000),

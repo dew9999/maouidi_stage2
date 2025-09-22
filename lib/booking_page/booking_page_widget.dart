@@ -8,7 +8,8 @@ import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
-
+import 'package:maouidi/partner_dashboard_page/components/dashboard_helpers.dart';
+import 'booking_page_model.dart';
 export 'booking_page_model.dart';
 
 Future<Map<String, String>?> showHomecareDetailsDialog(
@@ -254,13 +255,18 @@ class __NumberQueueBookingViewState extends State<_NumberQueueBookingView> {
       context.pop();
     } catch (e) {
       if (!mounted) return;
-      String errorMessage = 'Booking failed. Please try again.';
-      if (e is PostgrestException && e.message.isNotEmpty) {
-        errorMessage = e.message;
+      String errorMessage = 'An unexpected error occurred. Please try again.';
+      if (e is PostgrestException) {
+        if (e.message.contains('You already have an active appointment')) {
+          errorMessage = 'You already have an appointment for this day.';
+        } else if (e.message.contains('fully booked')) {
+          errorMessage = 'This provider is fully booked today.';
+        }
+      } else {
+        errorMessage =
+            'Could not connect to the server. Please check your internet connection.';
       }
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(errorMessage),
-          backgroundColor: FlutterFlowTheme.of(context).error));
+      showErrorSnackbar(context, errorMessage);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -492,10 +498,7 @@ class __TimeSlotBookingViewState extends State<_TimeSlotBookingView> {
               partnerId: widget.partnerId,
               selectedDate: _selectedDate,
               isPartnerBooking: widget.isPartnerBooking,
-              // --- THE FIX: Add a short delay before refreshing the UI ---
               onBookingComplete: () async {
-                // This delay gives the database time to commit the transaction
-                // before the UI asks for the new list of slots.
                 await Future.delayed(const Duration(milliseconds: 400));
                 if (mounted) {
                   setState(() => _refreshCounter++);
@@ -636,13 +639,19 @@ class _TimeSlotGridState extends State<_TimeSlotGrid> {
     } catch (e) {
       if (!mounted) return;
       Navigator.of(context).pop();
-      String errorMessage = 'Booking failed. Please try again.';
-      if (e is PostgrestException && e.message.isNotEmpty) {
-        errorMessage = e.message;
+      String errorMessage = 'An unexpected error occurred. Please try again.';
+      if (e is PostgrestException) {
+        if (e.message.contains('You already have an active appointment')) {
+          errorMessage = 'You already have an appointment for this day.';
+        } else {
+          errorMessage =
+              'This slot may have just been taken. Please try another.';
+        }
+      } else {
+        errorMessage =
+            'Could not connect to the server. Please check your internet connection.';
       }
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(errorMessage),
-          backgroundColor: FlutterFlowTheme.of(context).error));
+      showErrorSnackbar(context, errorMessage);
     }
   }
 

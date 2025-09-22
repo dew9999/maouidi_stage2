@@ -1,3 +1,5 @@
+// lib/backend/supabase/database/tables/appointments.dart
+
 import '../database.dart';
 
 class AppointmentsTable extends SupabaseTable<AppointmentsRow> {
@@ -34,4 +36,32 @@ class AppointmentsRow extends SupabaseDataRow {
 
   String get status => getField<String>('status')!;
   set status(String value) => setField<String>('status', value);
+
+  // --- ADDED MISSING FIELDS ---
+  String? get onBehalfOfPatientPhone =>
+      getField<String>('on_behalf_of_patient_phone');
+  set onBehalfOfPatientPhone(String? value) =>
+      setField<String>('on_behalf_of_patient_phone', value);
+
+  int? get appointmentNumber => getField<int>('appointment_number');
+  set appointmentNumber(int? value) =>
+      setField<int>('appointment_number', value);
+
+  bool? get isRescheduled => getField<bool>('is_rescheduled');
+  set isRescheduled(bool? value) => setField<bool>('is_rescheduled', value);
+
+  DateTime? get completedAt => getField<DateTime>('completed_at');
+  set completedAt(DateTime? value) => setField<DateTime>('completed_at', value);
+
+  bool? get hasReview => getField<bool>('has_review');
+  set hasReview(bool? value) => setField<bool>('has_review', value);
+
+  String? get caseDescription => getField<String>('case_description');
+  set caseDescription(String? value) =>
+      setField<String>('case_description', value);
+
+  String? get patientLocation => getField<String>('patient_location');
+  set patientLocation(String? value) =>
+      setField<String>('patient_location', value);
+  // -------------------------
 }

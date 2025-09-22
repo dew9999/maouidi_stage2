@@ -326,7 +326,8 @@ class _CreateWidgetState extends State<CreateWidget>
                                         letterSpacing: 0.0,
                                       ),
                                   validator: (value) {
-                                    if (value != _model.passwordTextController.text) {
+                                    if (value !=
+                                        _model.passwordTextController!.text) {
                                       return 'Passwords don\'t match!';
                                     }
                                     return null;
@@ -358,14 +359,14 @@ class _CreateWidgetState extends State<CreateWidget>
                             final user =
                                 await authManager.createAccountWithEmail(
                               context,
-                              _model.emailAddressTextController.text,
-                              _model.passwordTextController.text,
-                              firstName: _model.firstNameTextController.text,
-                              lastName: _model.lastNameTextController.text,
+                              _model.emailAddressTextController!.text,
+                              _model.passwordTextController!.text,
+                              firstName: _model.firstNameTextController!.text,
+                              lastName: _model.lastNameTextController!.text,
                             );
 
                             if (user == null) {
-                              // This will be caught by the catch block below
+                              // This will be caught by the catch block below if an error occurs
                               return;
                             }
                             if (!mounted) return;

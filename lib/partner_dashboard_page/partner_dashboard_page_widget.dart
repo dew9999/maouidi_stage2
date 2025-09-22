@@ -616,13 +616,13 @@ class _TimeSlotViewState extends State<_TimeSlotView> {
                 SegmentedButton<DateRangeFilter>(
                   segments: const [
                     ButtonSegment(
-                        value: DateRangeFilter.day, label: Text('Day')) ,
+                        value: DateRangeFilter.day, label: Text('Day')),
                     ButtonSegment(
-                        value: DateRangeFilter.week, label: Text('Week')) ,
+                        value: DateRangeFilter.week, label: Text('Week')),
                     ButtonSegment(
-                        value: DateRangeFilter.month, label: Text('Month')) ,
+                        value: DateRangeFilter.month, label: Text('Month')),
                     ButtonSegment(
-                        value: DateRangeFilter.all, label: Text('All')) ,
+                        value: DateRangeFilter.all, label: Text('All')),
                   ],
                   selected: {widget.model.dateFilter},
                   onSelectionChanged: (newSelection) => setState(
@@ -1091,7 +1091,6 @@ class _AppointmentInfoCard extends StatelessWidget {
                     try {
                       await client.from('appointments').update({
                         'status': 'Completed',
-                        // --- TIMEZONE FIX ---
                         'completed_at':
                             DateTime.now().toUtc().toIso8601String(),
                       }).eq('id', appointmentId);
@@ -1268,13 +1267,14 @@ class _AnalyticsViewState extends State<_AnalyticsView> {
   }
 
   Future<_AnalyticsData> _fetchAllAnalytics() async {
+    // Now we fetch weekly stats and summary stats in parallel
     final results = await Future.wait([
-      _fetchSummaryStats(),
       _fetchWeeklyStats(),
+      _fetchSummaryStats(), // This now uses the new, fast function
     ]);
     return _AnalyticsData(
-      summaryStats: results[0] as Map<String, int>,
-      weeklyStats: results[1] as List<Map<String, dynamic>>,
+      weeklyStats: results[0] as List<Map<String, dynamic>>,
+      summaryStats: results[1] as Map<String, int>,
     );
   }
 
@@ -1285,45 +1285,18 @@ class _AnalyticsViewState extends State<_AnalyticsView> {
         }).then((data) => List<Map<String, dynamic>>.from(data as List));
   }
 
+  // THIS IS THE NEW, EFFICIENT SUMMARY FUNCTION
   Future<Map<String, int>> _fetchSummaryStats() async {
-    final client = Supabase.instance.client;
-    final now = DateTime.now();
-    final startOfWeek =
-        now.subtract(Duration(days: now.weekday - 1)).startOfDay;
-    final startOfMonth = DateTime(now.year, now.month, 1);
-    final responses = await Future.wait([
-      client
-          .from('appointments')
-          .select()
-          .eq('partner_id', widget.partnerId)
-          .not('status', 'eq', 'Cancelled_ByUser')
-          .count(),
-      client
-          .from('appointments')
-          .select()
-          .eq('partner_id', widget.partnerId)
-          .eq('status', 'Completed')
-          .gte('appointment_time', startOfWeek.toIso8601String())
-          .count(),
-      client
-          .from('appointments')
-          .select()
-          .eq('partner_id', widget.partnerId)
-          .eq('status', 'Completed')
-          .gte('appointment_time', startOfMonth.toIso8601String())
-          .count(),
-      client
-          .from('appointments')
-          .select()
-          .eq('partner_id', widget.partnerId)
-          .eq('status', 'Cancelled_ByPartner')
-          .count(),
-    ]);
+    final data = await Supabase.instance.client.rpc('get_partner_analytics',
+        params: {'partner_id_arg': widget.partnerId});
+
+    final summary = data as Map<String, dynamic>;
+
     return {
-      'total': responses[0].count,
-      'week_completed': responses[1].count,
-      'month_completed': responses[2].count,
-      'partner_canceled': responses[3].count,
+      'total': summary['total'] as int? ?? 0,
+      'week_completed': summary['week_completed'] as int? ?? 0,
+      'month_completed': summary['month_completed'] as int? ?? 0,
+      'partner_canceled': summary['partner_canceled'] as int? ?? 0,
     };
   }
 
@@ -1623,7 +1596,6 @@ class NowServingCard extends StatelessWidget {
                       try {
                         await client.from('appointments').update({
                           'status': 'Completed',
-                          // --- TIMEZONE FIX ---
                           'completed_at':
                               DateTime.now().toUtc().toIso8601String(),
                         }).eq('id', appointmentId);
