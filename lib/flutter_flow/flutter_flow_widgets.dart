@@ -87,9 +87,7 @@ class _FFButtonWidgetState extends State<FFButtonWidget> {
   Widget build(BuildContext context) {
     Widget textWidget = loading
         ? SizedBox(
-            width: widget.options.width == null
-                ? _getTextWidth(text, widget.options.textStyle, maxLines)
-                : null,
+            width: widget.options.width == null ? 23 : null,
             child: Center(
               child: SizedBox(
                 width: 23,

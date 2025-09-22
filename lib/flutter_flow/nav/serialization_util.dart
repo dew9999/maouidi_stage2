@@ -2,9 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
-import '/backend/schema/structs/index.dart';
+import '../../backend/schema/structs/index.dart';
 
-import '/backend/supabase/supabase.dart';
+import '../../backend/supabase/supabase.dart';
 
 import '../../flutter_flow/place.dart';
 import '../../flutter_flow/uploaded_file.dart';
@@ -77,13 +77,9 @@ String? serializeParam(
 
       case ParamType.SupabaseRow:
         return json.encode((param as SupabaseDataRow).data);
-
-      default:
-        data = null;
     }
     return data;
   } catch (e) {
-    print('Error serializing parameter: $e');
     return null;
   }
 }
@@ -233,12 +229,8 @@ dynamic deserializeParam<T>(
       case ParamType.DataStruct:
         final data = json.decode(param) as Map<String, dynamic>? ?? {};
         return structBuilder != null ? structBuilder(data) : null;
-
-      default:
-        return null;
     }
   } catch (e) {
-    print('Error deserializing parameter: $e');
     return null;
   }
 }

@@ -13,6 +13,7 @@ import 'user_profile_model.dart';
 export 'user_profile_model.dart';
 import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart'
     as picker;
+import '/core/constants.dart'; // --- NEW: Import the constants file ---
 
 class UserProfileWidget extends StatefulWidget {
   const UserProfileWidget({super.key});
@@ -218,66 +219,8 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                       _buildDropDown(
                         controller: _model.stateValueController!,
                         hint: 'Select State',
-                        options: const [
-                          'Adrar',
-                          'Chlef',
-                          'Laghouat',
-                          'Oum El Bouaghi',
-                          'Batna',
-                          'Béjaïa',
-                          'Biskra',
-                          'Béchar',
-                          'Blida',
-                          'Bouira',
-                          'Tamanrasset',
-                          'Tébessa',
-                          'Tlemcen',
-                          'Tiaret',
-                          'Tizi Ouzou',
-                          'Alger',
-                          'Djelfa',
-                          'Jijel',
-                          'Sétif',
-                          'Saïda',
-                          'Skikda',
-                          'Sidi Bel Abbès',
-                          'Annaba',
-                          'Guelma',
-                          'Constantine',
-                          'Médéa',
-                          'Mostaganem',
-                          'M\'Sila',
-                          'Mascare',
-                          'Ouargla',
-                          'Oran',
-                          'El Bayadh',
-                          'Illizi',
-                          'Bordj Bou Arreridj',
-                          'Boumerdès',
-                          'El Tarf',
-                          'Tindouf',
-                          'Tissemsilt',
-                          'Oued souf',
-                          'Khenchela',
-                          'Souk Ahras',
-                          'Tipaza',
-                          'Mila',
-                          'Aïn Defla',
-                          'Naâma',
-                          'Aïn Témouchent',
-                          'Ghardaïa',
-                          'Relizane',
-                          'Timimoun',
-                          'Bordj Badji Mokhtar',
-                          'Ouled Djellal',
-                          'Béni Abbès',
-                          'In Salah',
-                          'AIn Guezzam',
-                          'Touggourt',
-                          'Djanet',
-                          'El M\'Ghair',
-                          'El Meniaa'
-                        ],
+                        // --- MODIFIED: Use the centralized list ---
+                        options: algerianStates,
                         icon: Icons.location_city_outlined,
                       ),
                       const SizedBox(height: 32),
@@ -408,8 +351,6 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
     required IconData icon,
   }) {
     final theme = FlutterFlowTheme.of(context);
-    // FIX: Rebuilt widget to use FlutterFlowDropDown's own styling properties
-    // This is the definitive fix for the background and padding issues.
     return AbsorbPointer(
       absorbing: !_isEditMode,
       child: FlutterFlowDropDown<String>(

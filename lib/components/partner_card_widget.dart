@@ -5,6 +5,7 @@ import 'package:maouidi/backend/supabase/supabase.dart';
 import 'package:maouidi/flutter_flow/flutter_flow_theme.dart';
 import 'package:maouidi/flutter_flow/flutter_flow_util.dart';
 import 'package:maouidi/flutter_flow/flutter_flow_widgets.dart';
+import '../core/constants.dart';
 
 class PartnerCardWidget extends StatelessWidget {
   const PartnerCardWidget({
@@ -49,8 +50,7 @@ class PartnerCardWidget extends StatelessWidget {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(10),
                     child: Image.network(
-                      partner.photoUrl ??
-                          'https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/health-app-j75f2j/assets/7957s72h1p38/avatar-default.png',
+                                            partner.photoUrl ?? DEFAULT_AVATAR_URL,
                       width: 90,
                       height: 90,
                       fit: BoxFit.cover,

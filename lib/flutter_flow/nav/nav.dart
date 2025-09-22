@@ -1,17 +1,18 @@
 // lib/flutter_flow/nav/nav.dart
 
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '/auth/base_auth_user_provider.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
-import '/flutter_flow/flutter_flow_util.dart';
-import '/index.dart';
+import '../../auth/base_auth_user_provider.dart';
+import '../flutter_flow_theme.dart';
+import '../flutter_flow_util.dart';
+import '../../index.dart';
 
 // Import all necessary pages
-import '/pages/privacy_policy_page.dart';
-import '/pages/terms_of_service_page.dart';
-import '/search/search_results_page.dart';
-import '/nav_bar_page.dart';
+import '../../pages/privacy_policy_page.dart';
+import '../../pages/terms_of_service_page.dart';
+import '../../search/search_results_page.dart';
+import '../../nav_bar_page.dart';
 
 export 'package:go_router/go_router.dart';
 export 'serialization_util.dart';
@@ -76,7 +77,7 @@ class AppStateNotifier extends ChangeNotifier {
 // ... THE REST OF THE FILE REMAINS EXACTLY THE SAME ...
 GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
       initialLocation: '/',
-      debugLogDiagnostics: true,
+      debugLogDiagnostics: kDebugMode,
       refreshListenable: appStateNotifier,
       navigatorKey: appNavigatorKey,
       errorBuilder: (context, state) => appStateNotifier.loggedIn

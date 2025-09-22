@@ -1,7 +1,7 @@
 // lib/partner_dashboard_page/components/homecare_details_view.dart
 
 import 'package:flutter/material.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
+import '../../flutter_flow/flutter_flow_theme.dart';
 
 class HomecareDetailsView extends StatelessWidget {
   const HomecareDetailsView({
@@ -32,7 +32,7 @@ class HomecareDetailsView extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: lightTheme
+                    color: lightTheme
               ? Colors.white.withOpacity(0.1)
               : theme.primaryBackground,
           borderRadius: BorderRadius.circular(8),

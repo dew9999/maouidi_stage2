@@ -2,12 +2,13 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../base_auth_user_provider.dart' as baseAuthUserProvider;
-import '../auth_manager.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../backend/supabase/supabase.dart';
+import '../auth_manager.dart';
+import '../base_auth_user_provider.dart' as base_auth_user_provider;
 import 'auth_util.dart';
 
-class MaouidiSupabaseUser extends baseAuthUserProvider.BaseAuthUser {
+class MaouidiSupabaseUser extends base_auth_user_provider.BaseAuthUser {
   MaouidiSupabaseUser(this.user);
   final User user;
 
@@ -15,8 +16,8 @@ class MaouidiSupabaseUser extends baseAuthUserProvider.BaseAuthUser {
   bool get loggedIn => true;
 
   @override
-  baseAuthUserProvider.AuthUserInfo get authUserInfo =>
-      baseAuthUserProvider.AuthUserInfo(
+  base_auth_user_provider.AuthUserInfo get authUserInfo =>
+      base_auth_user_provider.AuthUserInfo(
         uid: user.id,
         email: user.email,
         displayName: user.userMetadata?['full_name'],
@@ -30,43 +31,40 @@ class MaouidiSupabaseUser extends baseAuthUserProvider.BaseAuthUser {
   String? get jwtToken => SupaFlow.client.auth.currentSession?.accessToken;
 
   @override
-  Future<void> delete() =>
-      authManager.deleteUser(GlobalKey<ScaffoldState>().currentContext!);
-
-  @override
-  Future<void> updateEmail(String email) => authManager.updateEmail(
-      email: email, context: GlobalKey<ScaffoldState>().currentContext!);
-
-  @override
   Future<void> updatePassword(String newPassword) =>
       SupaFlow.client.auth.updateUser(UserAttributes(password: newPassword));
 
-  @override
-  Future<void> sendEmailVerification() => authManager.sendEmailVerification();
-
+  // --- ADDED: The missing refreshUser method ---
   @override
   Future<void> refreshUser() => authManager.refreshUser();
+  // ---------------------------------------------
+
+  @override
+  Future<void> sendEmailVerification() async {
+    if (user.email == null) return;
+    await SupaFlow.client.auth.resend(type: OtpType.email, email: user.email!);
+  }
 }
 
 class SupabaseAuthManager implements AuthManager {
   GoTrueClient get auth => SupaFlow.client.auth;
 
   @override
-  baseAuthUserProvider.BaseAuthUser? get currentUser =>
-      baseAuthUserProvider.currentUser;
+  base_auth_user_provider.BaseAuthUser? get currentUser =>
+      base_auth_user_provider.currentUser;
 
   @override
   Future<void> refreshUser() async {
     final response = await auth.refreshSession();
     if (response.user != null) {
-      baseAuthUserProvider.currentUser = MaouidiSupabaseUser(response.user!);
+      base_auth_user_provider.currentUser = MaouidiSupabaseUser(response.user!);
     }
   }
 
   @override
   Future<void> signOut() async {
     await auth.signOut();
-    baseAuthUserProvider.currentUser = null;
+    base_auth_user_provider.currentUser = null;
   }
 
   @override
@@ -75,7 +73,7 @@ class SupabaseAuthManager implements AuthManager {
       if (currentUser?.uid == null) {
         throw Exception('User is not signed in.');
       }
-      await SupaFlow.client.functions.invoke('delete-user');
+      await SupaFlow.client.rpc('delete_user_account');
       await signOut();
     } catch (e) {
       debugPrint('Error deleting user: $e');
@@ -126,7 +124,7 @@ class SupabaseAuthManager implements AuthManager {
   }
 
   @override
-  Future<baseAuthUserProvider.BaseAuthUser?> signInWithEmail(
+  Future<base_auth_user_provider.BaseAuthUser?> signInWithEmail(
     BuildContext context,
     String email,
     String password,
@@ -134,24 +132,36 @@ class SupabaseAuthManager implements AuthManager {
     final authResponse =
         await auth.signInWithPassword(email: email, password: password);
     if (authResponse.user != null) {
-      baseAuthUserProvider.currentUser =
+      base_auth_user_provider.currentUser =
           MaouidiSupabaseUser(authResponse.user!);
-      return baseAuthUserProvider.currentUser;
+      return base_auth_user_provider.currentUser;
     }
     return null;
   }
 
   @override
-  Future<baseAuthUserProvider.BaseAuthUser?> createAccountWithEmail(
+  Future<base_auth_user_provider.BaseAuthUser?> createAccountWithEmail(
     BuildContext context,
     String email,
-    String password,
-  ) async {
-    final authResponse = await auth.signUp(email: email, password: password);
+    String password, {
+    String? firstName,
+    String? lastName,
+  }) async {
+    final authResponse = await auth.signUp(
+      email: email,
+      password: password,
+      data: {
+        'first_name': firstName,
+        'last_name': lastName,
+      },
+    );
+    if (authResponse.user?.lastSignInAt == null) {
+      return null;
+    }
     if (authResponse.user != null) {
-      baseAuthUserProvider.currentUser =
+      base_auth_user_provider.currentUser =
           MaouidiSupabaseUser(authResponse.user!);
-      return baseAuthUserProvider.currentUser;
+      return base_auth_user_provider.currentUser;
     }
     return null;
   }

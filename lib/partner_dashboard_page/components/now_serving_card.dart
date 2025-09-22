@@ -2,8 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
+import '../../flutter_flow/flutter_flow_theme.dart';
+import '../../flutter_flow/flutter_flow_widgets.dart';
 import 'homecare_details_view.dart';
 import 'dashboard_helpers.dart'; // CORRECTED: Import from the new helper file
 
@@ -91,7 +91,7 @@ class NowServingCard extends StatelessWidget {
                     text: 'No-Show',
                     options: FFButtonOptions(
                       height: 44,
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withAlpha(51),
                       textStyle: theme.titleSmall.copyWith(color: Colors.white),
                     ),
                   ),

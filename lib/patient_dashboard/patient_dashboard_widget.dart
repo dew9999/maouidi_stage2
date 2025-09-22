@@ -2,10 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '/components/empty_state_widget.dart'; // NEW: Import the empty state component
-import '/flutter_flow/flutter_flow_theme.dart';
-import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
+import '../../components/empty_state_widget.dart';
+import '../../flutter_flow/flutter_flow_theme.dart';
+import '../../flutter_flow/flutter_flow_util.dart';
+import '../../flutter_flow/flutter_flow_widgets.dart';
 import 'patient_dashboard_model.dart';
 export 'patient_dashboard_model.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -49,7 +49,7 @@ class _PatientDashboardWidgetState extends State<PatientDashboardWidget>
     var query = client
         .from('appointments')
         .select(
-            '*, has_review, completed_at, medical_partners(full_name, specialty)')
+            '*, appointment_number, has_review, completed_at, medical_partners(full_name, specialty)') // MODIFIED: Explicitly select appointment_number
         .eq('booking_user_id', userId)
         .inFilter('status', statuses);
 
@@ -86,7 +86,7 @@ class _PatientDashboardWidgetState extends State<PatientDashboardWidget>
           controller: _tabController,
           labelStyle: theme.titleSmall.copyWith(fontWeight: FontWeight.bold),
           labelColor: Colors.white,
-          unselectedLabelColor: Colors.white.withOpacity(0.7),
+          unselectedLabelColor: Colors.white.withAlpha(178),
           indicatorColor: theme.accent1,
           indicatorWeight: 3.0,
           tabs: const [
@@ -126,7 +126,6 @@ class _PatientDashboardWidgetState extends State<PatientDashboardWidget>
           return Center(child: Text('An error occurred: ${snapshot.error}.'));
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          // --- MODIFIED: Use the new EmptyStateWidget ---
           return const EmptyStateWidget(
             icon: Icons.calendar_month_outlined,
             title: 'No Appointments',
@@ -212,6 +211,9 @@ class PatientAppointmentCard extends StatelessWidget {
     final appointmentTime =
         DateTime.parse(appointmentData['appointment_time']).toLocal();
 
+    // --- NEW: Check if this is a queue-based appointment ---
+    final appointmentNumber = appointmentData['appointment_number'] as int?;
+
     return Container(
       decoration: BoxDecoration(
         color: theme.secondaryBackground,
@@ -287,11 +289,20 @@ class PatientAppointmentCard extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 4),
-                              Text(
-                                DateFormat('h:mm a').format(appointmentTime),
-                                style: theme.bodyMedium
-                                    .copyWith(color: theme.secondaryText),
-                              ),
+                              // --- MODIFIED: Conditionally display number or time ---
+                              if (appointmentNumber != null)
+                                Text(
+                                  'Your Number: #$appointmentNumber',
+                                  style: theme.bodyMedium.copyWith(
+                                      color: theme.secondaryText,
+                                      fontWeight: FontWeight.bold),
+                                )
+                              else
+                                Text(
+                                  DateFormat('h:mm a').format(appointmentTime),
+                                  style: theme.bodyMedium
+                                      .copyWith(color: theme.secondaryText),
+                                ),
                             ],
                           ),
                         ],
@@ -368,12 +379,14 @@ class PatientAppointmentCard extends StatelessWidget {
                   'cancel_and_reorder_queue',
                   params: {'appointment_id_arg': appointmentId},
                 );
+                if (!context.mounted) return;
                 Navigator.of(dialogContext).pop();
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                     content: Text('Appointment canceled successfully.'),
                     backgroundColor: Colors.green));
                 onActionCompleted();
               } catch (e) {
+                if (!context.mounted) return;
                 Navigator.of(dialogContext).pop();
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text('Failed to cancel: ${e.toString()}'),

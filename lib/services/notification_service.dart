@@ -1,3 +1,5 @@
+// lib/services/notification_service.dart
+
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -16,30 +18,16 @@ class NotificationService {
     });
   }
 
+  // MODIFIED: This function is now much simpler and safer.
+  // It just calls our single backend function.
   Future<void> _savePlayerIdToSupabase(String playerId) async {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId == null) return;
+    // We only proceed if a user is logged in.
+    if (Supabase.instance.client.auth.currentUser == null) return;
 
     try {
-      // Step 1: Always update the central 'users' table.
-      await Supabase.instance.client
-          .from('users')
-          .update({'onesignal_player_id': playerId}).eq('id', userId);
-
-      // Step 2: Check if this user is also a medical partner.
-      final partnerCheck = await Supabase.instance.client
-          .from('medical_partners')
-          .select('id')
-          .eq('id', userId)
-          .maybeSingle();
-
-      // Step 3: If they are a partner, update their record as well.
-      if (partnerCheck != null) {
-        await Supabase.instance.client
-            .from('medical_partners')
-            .update({'onesignal_player_id': playerId}).eq('id', userId);
-      }
-
+      await Supabase.instance.client.rpc('update_player_id', params: {
+        'player_id_arg': playerId,
+      });
       debugPrint('OneSignal Player ID saved to Supabase: $playerId');
     } catch (e) {
       debugPrint('Error saving OneSignal Player ID: $e');

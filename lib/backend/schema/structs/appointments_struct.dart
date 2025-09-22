@@ -11,13 +11,13 @@ class AppointmentsStruct extends BaseStruct {
     String? partnerId,
     String? bookingUserId,
     String? onBehalfOfPatientName,
-    String? appointmentTime,
+    DateTime? appointmentTime, // Changed from String? to DateTime?
     String? status,
   })  : _id = id,
         _partnerId = partnerId,
         _bookingUserId = bookingUserId,
         _onBehalfOfPatientName = onBehalfOfPatientName,
-        _appointmentTime = appointmentTime,
+        _appointmentTime = appointmentTime, // Changed from String? to DateTime?
         _status = status;
 
   // "id" field.
@@ -51,9 +51,9 @@ class AppointmentsStruct extends BaseStruct {
   bool hasOnBehalfOfPatientName() => _onBehalfOfPatientName != null;
 
   // "appointment_time" field.
-  String? _appointmentTime;
-  String get appointmentTime => _appointmentTime ?? '';
-  set appointmentTime(String? val) => _appointmentTime = val;
+  DateTime? _appointmentTime; // Changed from String? to DateTime?
+  DateTime? get appointmentTime => _appointmentTime; // Changed from String to DateTime?
+  set appointmentTime(DateTime? val) => _appointmentTime = val; // Changed from String? to DateTime?
 
   bool hasAppointmentTime() => _appointmentTime != null;
 
@@ -70,7 +70,7 @@ class AppointmentsStruct extends BaseStruct {
         partnerId: data['partner_id'] as String?,
         bookingUserId: data['booking_user_id'] as String?,
         onBehalfOfPatientName: data['on_behalf_of_patient_name'] as String?,
-        appointmentTime: data['appointment_time'] as String?,
+        appointmentTime: castToType<DateTime>(data['appointment_time']), // Changed from String? to DateTime?
         status: data['status'] as String?,
       );
 
@@ -107,7 +107,7 @@ class AppointmentsStruct extends BaseStruct {
         ),
         'appointment_time': serializeParam(
           _appointmentTime,
-          ParamType.String,
+          ParamType.DateTime, // Changed from ParamType.String to ParamType.DateTime
         ),
         'status': serializeParam(
           _status,
@@ -139,7 +139,7 @@ class AppointmentsStruct extends BaseStruct {
         ),
         appointmentTime: deserializeParam(
           data['appointment_time'],
-          ParamType.String,
+          ParamType.DateTime, // Changed from ParamType.String to ParamType.DateTime
           false,
         ),
         status: deserializeParam(
@@ -179,7 +179,7 @@ AppointmentsStruct createAppointmentsStruct({
   String? partnerId,
   String? bookingUserId,
   String? onBehalfOfPatientName,
-  String? appointmentTime,
+  DateTime? appointmentTime, // Changed from String? to DateTime?
   String? status,
 }) =>
     AppointmentsStruct(
@@ -187,6 +187,6 @@ AppointmentsStruct createAppointmentsStruct({
       partnerId: partnerId,
       bookingUserId: bookingUserId,
       onBehalfOfPatientName: onBehalfOfPatientName,
-      appointmentTime: appointmentTime,
+      appointmentTime: appointmentTime, // Changed from String? to DateTime?
       status: status,
     );

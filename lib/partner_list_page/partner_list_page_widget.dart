@@ -82,7 +82,6 @@ class _PartnerListPageWidgetState extends State<PartnerListPageWidget> {
     }
   }
 
-  // --- NEW: Method to clear all active filters ---
   void _clearFilters() {
     setState(() {
       _stateValueController.value = null;
@@ -102,70 +101,11 @@ class _PartnerListPageWidgetState extends State<PartnerListPageWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
-    const wilayas = [
-      'Adrar',
-      'Chlef',
-      'Laghouat',
-      'Oum El Bouaghi',
-      'Batna',
-      'Béjaïa',
-      'Biskra',
-      'Béchar',
-      'Blida',
-      'Bouira',
-      'Tamanrasset',
-      'Tébessa',
-      'Tlemcen',
-      'Tiaret',
-      'Tizi Ouzou',
-      'Alger',
-      'Djelfa',
-      'Jijel',
-      'Sétif',
-      'Saïda',
-      'Skikda',
-      'Sidi Bel Abbès',
-      'Annaba',
-      'Guelma',
-      'Constantine',
-      'Médéa',
-      'Mostaganem',
-      'M\'Sila',
-      'Mascare',
-      'Ouargla',
-      'Oran',
-      'El Bayadh',
-      'Illizi',
-      'Bordj Bou Arreridj',
-      'Boumerdès',
-      'El Tarf',
-      'Tindouf',
-      'Tissemsilt',
-      'Oued souf',
-      'Khenchela',
-      'Souk Ahras',
-      'Tipaza',
-      'Mila',
-      'Aïn Defla',
-      'Naâma',
-      'Aïn Témouchent',
-      'Ghardaïa',
-      'Relizane',
-      'Timimoun',
-      'Bordj Badji Mokhtar',
-      'Ouled Djellal',
-      'Béni Abbès',
-      'In Salah',
-      'AIn Guezzam',
-      'Touggourt',
-      'Djanet',
-      'El M\'Ghair',
-      'El Meniaa'
-    ];
+
+    // --- DELETED: The local 'wilayas' list is now removed ---
 
     final showSpecialtyFilter =
         widget.categoryName != 'Clinics' && widget.categoryName != 'Charities';
-    // --- NEW: Check if any filter is currently active ---
     final bool isFilterActive = _stateValueController.value != null ||
         _specialtyValueController.value != null;
 
@@ -183,7 +123,6 @@ class _PartnerListPageWidgetState extends State<PartnerListPageWidget> {
       ),
       body: Column(
         children: [
-          // --- NEW: Container to improve the UI of the filter section ---
           Container(
             padding: const EdgeInsets.all(8.0),
             decoration: BoxDecoration(
@@ -203,7 +142,8 @@ class _PartnerListPageWidgetState extends State<PartnerListPageWidget> {
                     Expanded(
                       child: FlutterFlowDropDown<String>(
                         controller: _stateValueController,
-                        options: const ['All States', ...wilayas],
+                        // --- MODIFIED: Use the centralized 'algerianStates' list ---
+                        options: const ['All States', ...algerianStates],
                         onChanged: (val) {
                           setState(() => _stateValueController.value =
                               val == 'All States' ? null : val);
@@ -246,7 +186,6 @@ class _PartnerListPageWidgetState extends State<PartnerListPageWidget> {
                       ),
                   ],
                 ),
-                // --- NEW: Smart "Clear Filters" button ---
                 if (isFilterActive)
                   Padding(
                     padding: const EdgeInsets.only(top: 8.0),

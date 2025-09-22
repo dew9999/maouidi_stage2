@@ -31,7 +31,15 @@ class FFPlace {
       )''';
 
   @override
-  int get hashCode => latLng.hashCode;
+  int get hashCode => Object.hash(
+        latLng,
+        name,
+        address,
+        city,
+        state,
+        country,
+        zipCode,
+      );
 
   @override
   bool operator ==(other) =>

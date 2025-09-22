@@ -1,24 +1,18 @@
 // lib/partner_dashboard_page/partner_dashboard_page_widget.dart
 
-import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '/components/empty_state_widget.dart';
-import '/flutter_flow/flutter_flow_calendar.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
-import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
+import '../../components/empty_state_widget.dart';
+import '../../flutter_flow/flutter_flow_calendar.dart';
+import '../../flutter_flow/flutter_flow_theme.dart';
+import '../../flutter_flow/flutter_flow_util.dart';
+import '../../flutter_flow/flutter_flow_widgets.dart';
 import 'partner_dashboard_page_model.dart';
-import '/backend/supabase/supabase.dart';
-import 'components/now_serving_card.dart';
+import '../../backend/supabase/supabase.dart';
 import 'components/homecare_details_view.dart';
 import 'components/dashboard_helpers.dart';
 
 export 'partner_dashboard_page_model.dart';
-
-// ... (The rest of the file follows)
 
 class PartnerDashboardPageWidget extends StatefulWidget {
   const PartnerDashboardPageWidget({
@@ -193,7 +187,8 @@ class _StandardPartnerDashboardViewState
                     'book_appointment',
                     params: {
                       'partner_id_arg': widget.partnerId,
-                      'appointment_time_arg': DateTime.now().toIso8601String(),
+                      'appointment_time_arg':
+                          DateTime.now().toUtc().toIso8601String(),
                       'on_behalf_of_name_arg': nameController.text,
                       'on_behalf_of_phone_arg': phoneController.text,
                       'is_partner_override': true,
@@ -203,13 +198,14 @@ class _StandardPartnerDashboardViewState
                           isHomecare ? locationController.text : null,
                     },
                   );
+                  if (!mounted) return;
                   Navigator.of(dialogContext).pop();
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                       content: Text('Appointment created successfully!'),
                       backgroundColor: Colors.green));
                   setState(() => _refreshCounter++);
                 } catch (e) {
-                  if (context.mounted) {
+                  if (mounted) {
                     showErrorSnackbar(
                         context, 'Booking failed: ${e.toString()}');
                   }
@@ -620,13 +616,13 @@ class _TimeSlotViewState extends State<_TimeSlotView> {
                 SegmentedButton<DateRangeFilter>(
                   segments: const [
                     ButtonSegment(
-                        value: DateRangeFilter.day, label: Text('Day')),
+                        value: DateRangeFilter.day, label: Text('Day')) ,
                     ButtonSegment(
-                        value: DateRangeFilter.week, label: Text('Week')),
+                        value: DateRangeFilter.week, label: Text('Week')) ,
                     ButtonSegment(
-                        value: DateRangeFilter.month, label: Text('Month')),
+                        value: DateRangeFilter.month, label: Text('Month')) ,
                     ButtonSegment(
-                        value: DateRangeFilter.all, label: Text('All')),
+                        value: DateRangeFilter.all, label: Text('All')) ,
                   ],
                   selected: {widget.model.dateFilter},
                   onSelectionChanged: (newSelection) => setState(
@@ -990,7 +986,7 @@ class _AppointmentInfoCard extends StatelessWidget {
                             'Are you sure you want to cancel this appointment?',
                         confirmText: 'Confirm',
                       );
-                      if (confirmed) {
+                      if (confirmed == true) {
                         try {
                           await client
                               .from('appointments')
@@ -1095,7 +1091,9 @@ class _AppointmentInfoCard extends StatelessWidget {
                     try {
                       await client.from('appointments').update({
                         'status': 'Completed',
-                        'completed_at': DateTime.now().toIso8601String(),
+                        // --- TIMEZONE FIX ---
+                        'completed_at':
+                            DateTime.now().toUtc().toIso8601String(),
                       }).eq('id', appointmentId);
                       onAction();
                     } catch (e) {
@@ -1155,7 +1153,7 @@ class _UpNextQueueCard extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 20,
-                  backgroundColor: theme.accent1.withOpacity(0.1),
+                  backgroundColor: theme.accent1.withAlpha(25),
                   child: Text(
                     '$appointmentNumber',
                     style: theme.titleMedium.copyWith(color: theme.primary),
@@ -1175,7 +1173,7 @@ class _UpNextQueueCard extends StatelessWidget {
                             'Are you sure you want to cancel this request?',
                         confirmText: 'Confirm',
                       );
-                      if (confirmed) {
+                      if (confirmed == true) {
                         try {
                           await client
                               .from('appointments')
@@ -1241,7 +1239,7 @@ class _UpNextQueueCard extends StatelessWidget {
               options: FFButtonOptions(
                 width: double.infinity,
                 height: 40,
-                color: theme.primary.withOpacity(0.1),
+                color: theme.primary.withAlpha(25),
                 textStyle: theme.titleSmall.copyWith(color: theme.primary),
                 elevation: 0,
                 borderSide: BorderSide(color: theme.primary, width: 1),
@@ -1526,4 +1524,132 @@ class _AnalyticsData {
   final Map<String, int> summaryStats;
   final List<Map<String, dynamic>> weeklyStats;
   _AnalyticsData({required this.summaryStats, required this.weeklyStats});
+}
+
+class NowServingCard extends StatelessWidget {
+  const NowServingCard({
+    super.key,
+    required this.appointmentData,
+    required this.onAction,
+  });
+
+  final Map<String, dynamic> appointmentData;
+  final VoidCallback onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+    final client = Supabase.instance.client;
+    final appointmentId = appointmentData['id'];
+    final userData = appointmentData['users'] as Map<String, dynamic>? ?? {};
+    final bookingUserName =
+        ('${userData['first_name'] ?? ''} ${userData['last_name'] ?? ''}')
+            .trim();
+    final onBehalfOfName =
+        appointmentData['on_behalf_of_patient_name'] as String?;
+    final displayName = onBehalfOfName ??
+        (bookingUserName.isNotEmpty ? bookingUserName : 'A Patient');
+    final appointmentNumber = appointmentData['appointment_number'];
+
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            colors: [theme.primary, theme.tertiary],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Now Serving',
+                style: theme.labelLarge.copyWith(color: Colors.white70)),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 28,
+                  backgroundColor: Colors.white,
+                  child: Text('$appointmentNumber',
+                      style: theme.displaySmall.copyWith(color: theme.primary)),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    displayName,
+                    style: theme.headlineMedium.copyWith(
+                        color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+            HomecareDetailsView(
+                appointmentData: appointmentData, lightTheme: true),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: FFButtonWidget(
+                    onPressed: () async {
+                      try {
+                        await client.from('appointments').update(
+                            {'status': 'NoShow'}).eq('id', appointmentId);
+                        onAction();
+                      } catch (e) {
+                        if (context.mounted) {
+                          showErrorSnackbar(
+                              context, 'Action failed: ${e.toString()}');
+                        }
+                      }
+                    },
+                    text: 'No-Show',
+                    options: FFButtonOptions(
+                      height: 44,
+                      color: Colors.white.withAlpha(51),
+                      textStyle: theme.titleSmall.copyWith(color: Colors.white),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 2,
+                  child: FFButtonWidget(
+                    onPressed: () async {
+                      try {
+                        await client.from('appointments').update({
+                          'status': 'Completed',
+                          // --- TIMEZONE FIX ---
+                          'completed_at':
+                              DateTime.now().toUtc().toIso8601String(),
+                        }).eq('id', appointmentId);
+                        onAction();
+                      } catch (e) {
+                        if (context.mounted) {
+                          showErrorSnackbar(
+                              context, 'Action failed: ${e.toString()}');
+                        }
+                      }
+                    },
+                    text: 'Mark as Completed',
+                    icon: const Icon(Icons.check_circle, size: 20),
+                    options: FFButtonOptions(
+                      height: 44,
+                      color: Colors.white,
+                      textStyle: theme.titleSmall.copyWith(
+                          color: theme.primary, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

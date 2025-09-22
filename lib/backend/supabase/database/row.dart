@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 import 'database.dart';
+import 'table.dart';
 
 abstract class SupabaseDataRow {
   SupabaseDataRow(this.data);

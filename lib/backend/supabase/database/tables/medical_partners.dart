@@ -1,3 +1,5 @@
+// lib/backend/supabase/database/tables/medical_partners.dart
+
 import '../database.dart';
 
 class MedicalPartnersTable extends SupabaseTable<MedicalPartnersRow> {
@@ -28,9 +30,11 @@ class MedicalPartnersRow extends SupabaseDataRow {
   set confirmationMode(String value) =>
       setField<String>('confirmation_mode', value);
 
+  // --- CORRECTED: Kept as 'dynamic' for consistency with the app ---
   dynamic get workingHours => getField<dynamic>('working_hours');
   set workingHours(dynamic value) => setField<dynamic>('working_hours', value);
 
+  // --- CORRECTED: Changed from List<String> to List<DateTime> for type safety ---
   List<DateTime> get closedDays => getListField<DateTime>('closed_days');
   set closedDays(List<DateTime>? value) =>
       setListField<DateTime>('closed_days', value);
@@ -55,4 +59,45 @@ class MedicalPartnersRow extends SupabaseDataRow {
 
   String? get category => getField<String>('category');
   set category(String? value) => setField<String>('category', value);
+
+  String? get address => getField<String>('address');
+  set address(String? value) => setField<String>('address', value);
+
+  String? get nationalIdNumber => getField<String>('national_id_number');
+  set nationalIdNumber(String? value) =>
+      setField<String>('national_id_number', value);
+
+  String? get medicalLicenseNumber =>
+      getField<String>('medical_license_number');
+  set medicalLicenseNumber(String? value) =>
+      setField<String>('medical_license_number', value);
+
+  String? get bio => getField<String>('bio');
+  set bio(String? value) => setField<String>('bio', value);
+
+  String? get locationUrl => getField<String>('location_url');
+  set locationUrl(String? value) => setField<String>('location_url', value);
+
+  String? get bookingSystemType => getField<String>('booking_system_type');
+  set bookingSystemType(String? value) =>
+      setField<String>('booking_system_type', value);
+
+  int? get dailyBookingLimit => getField<int>('daily_booking_limit');
+  set dailyBookingLimit(int? value) =>
+      setField<int>('daily_booking_limit', value);
+
+  bool? get isActive => getField<bool>('is_active');
+  set isActive(bool? value) => setField<bool>('is_active', value);
+
+  String? get parentClinicId => getField<String>('parent_clinic_id');
+  set parentClinicId(String? value) =>
+      setField<String>('parent_clinic_id', value);
+
+  bool? get notificationsEnabled => getField<bool>('notifications_enabled');
+  set notificationsEnabled(bool? value) =>
+      setField<bool>('notifications_enabled', value);
+
+  String? get onesignalPlayerId => getField<String>('onesignal_player_id');
+  set onesignalPlayerId(String? value) =>
+      setField<String>('onesignal_player_id', value);
 }

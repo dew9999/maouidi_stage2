@@ -1,6 +1,6 @@
 // lib/home_page/home_page_widget.dart
 
-import 'dart:async'; // NEW: Import for Timer
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -25,7 +25,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   late HomePageModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // NEW: Timer for debouncing the search
   Timer? _debounce;
 
   @override
@@ -39,7 +38,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   @override
   void dispose() {
     _model.dispose();
-    _debounce?.cancel(); // NEW: Cancel timer on dispose
+    _debounce?.cancel();
     super.dispose();
   }
 
@@ -78,13 +77,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     controller: _model.textController,
                     focusNode: _model.textFieldFocusNode,
                     obscureText: false,
-                    // MODIFIED: Use onChanged for live search
                     onChanged: (value) {
-                      // If a timer is already active, cancel it
                       if (_debounce?.isActive ?? false) _debounce!.cancel();
-                      // Start a new timer
                       _debounce = Timer(const Duration(milliseconds: 500), () {
-                        // This code runs after the user has stopped typing for 500ms
                         if (value.trim().isNotEmpty) {
                           context.pushNamed(
                             'SearchResultsPage',
@@ -127,8 +122,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                       begin: const Offset(0, 20),
                       end: const Offset(0, 0)),
                 ]),
-
-                // --- Categories Section ---
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
                   child: Text('Categories', style: theme.titleLarge),
@@ -160,11 +153,14 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                         onTap: () => context.pushNamed('PartnerListPage',
                             queryParameters: {'categoryName': 'Clinics'}),
                       ),
+                      // --- MODIFIED: Changed "Nurses" to "Homecare" ---
                       _CategoryCard(
-                        icon: FontAwesomeIcons.stethoscope,
-                        label: 'Nurses',
+                        icon: FontAwesomeIcons.briefcaseMedical, // Changed icon
+                        label: 'Homecare', // Changed label
                         onTap: () => context.pushNamed('PartnerListPage',
-                            queryParameters: {'categoryName': 'Nurses'}),
+                            queryParameters: {
+                              'categoryName': 'Homecare'
+                            }), // Changed parameter
                       ),
                       _CategoryCard(
                         icon: FontAwesomeIcons.handHoldingHeart,
@@ -182,8 +178,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                       begin: 0,
                       end: 1),
                 ]),
-
-                // --- Featured Partners Section ---
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
                   child: Text('Featured Partners', style: theme.titleLarge),

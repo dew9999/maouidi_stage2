@@ -5,15 +5,14 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
-import 'package:go_router/go_router.dart';
 import 'package:maouidi/auth/base_auth_user_provider.dart';
 import 'auth/supabase_auth/auth_util.dart';
-import '/backend/supabase/supabase.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
-import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/internationalization.dart';
+import 'backend/supabase/supabase.dart';
+import 'flutter_flow/flutter_flow_theme.dart';
+import 'flutter_flow/flutter_flow_util.dart';
+import 'flutter_flow/internationalization.dart';
 import 'services/notification_service.dart';
-import '/flutter_flow/nav/nav.dart';
+import 'flutter_flow/nav/nav.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -86,7 +85,7 @@ class _MyAppState extends State<MyApp> {
         }
       });
 
-    jwtTokenStream.listen((_) {});
+    
 
     Future.delayed(
       const Duration(milliseconds: 1000),

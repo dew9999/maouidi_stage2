@@ -1,16 +1,18 @@
+import 'package:flutter/foundation.dart'; // For debugPrint
+
 List<DateTime> getAvailableTimeSlots(
   DateTime selectedDay,
-  dynamic workingHours,
+  dynamic workingHours, // Reverted type
   int? appointmentDuration,
   List<DateTime> bookedAppointmentTimes,
   List<DateTime> closedDays,
 ) {
-  print('--- Function Started ---');
-  print('Received selectedDay: $selectedDay');
-  print('Received workingHours: $workingHours');
-  print('Received appointmentDuration: $appointmentDuration');
-  print('Received bookedAppointmentTimes: $bookedAppointmentTimes');
-  print('Received closedDays: $closedDays');
+  
+  
+  
+  
+  
+  
   // 1. --- Safety Checks & Initial Parsing ---
   if (workingHours == null || appointmentDuration == null) {
     return [];
@@ -77,7 +79,7 @@ List<DateTime> getAvailableTimeSlots(
         slot = slot.add(Duration(minutes: appointmentDuration));
       }
     } catch (e) {
-      print('Could not parse time period: $period');
+      debugPrint('Error parsing time slot: $e');
     }
   }
 
@@ -91,6 +93,4 @@ List<DateTime> getAvailableTimeSlots(
 
   // 4. --- Return the Final List ---
   return allPossibleSlots;
-  print('--- Function Finished ---');
-  print('Returning these slots: $allPossibleSlots');
 }

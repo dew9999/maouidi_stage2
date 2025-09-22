@@ -1,12 +1,11 @@
 // lib/ui/create/create_widget.dart
 
-import '/auth/supabase_auth/auth_util.dart';
-import '/backend/supabase/supabase.dart';
-import '/flutter_flow/flutter_flow_animations.dart';
-import '/flutter_flow/flutter_flow_icon_button.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
-import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
+import '../../auth/supabase_auth/auth_util.dart';
+import '../../flutter_flow/flutter_flow_animations.dart';
+import '../../flutter_flow/flutter_flow_icon_button.dart';
+import '../../flutter_flow/flutter_flow_theme.dart';
+import '../../flutter_flow/flutter_flow_util.dart';
+import '../../flutter_flow/flutter_flow_widgets.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -175,9 +174,12 @@ class _CreateWidgetState extends State<CreateWidget>
                                         fontFamily: 'Inter',
                                         letterSpacing: 0.0,
                                       ),
-                                  validator: _model
-                                      .firstNameTextControllerValidator
-                                      .asValidator(context),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'First name is required.';
+                                    }
+                                    return null;
+                                  },
                                 ),
                               ),
                               Padding(
@@ -200,9 +202,12 @@ class _CreateWidgetState extends State<CreateWidget>
                                         fontFamily: 'Inter',
                                         letterSpacing: 0.0,
                                       ),
-                                  validator: _model
-                                      .lastNameTextControllerValidator
-                                      .asValidator(context),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Last name is required.';
+                                    }
+                                    return null;
+                                  },
                                 ),
                               ),
                               Padding(
@@ -210,6 +215,7 @@ class _CreateWidgetState extends State<CreateWidget>
                                 child: TextFormField(
                                   controller: _model.emailAddressTextController,
                                   focusNode: _model.emailAddressFocusNode,
+                                  keyboardType: TextInputType.emailAddress,
                                   decoration: InputDecoration(
                                     labelText: 'Email Address',
                                     labelStyle: FlutterFlowTheme.of(context)
@@ -225,9 +231,17 @@ class _CreateWidgetState extends State<CreateWidget>
                                         fontFamily: 'Inter',
                                         letterSpacing: 0.0,
                                       ),
-                                  validator: _model
-                                      .emailAddressTextControllerValidator
-                                      .asValidator(context),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Email is required.';
+                                    }
+                                    final emailRegex = RegExp(
+                                        r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~-]+@[a-zA-Z0-9]+\.[a-zA-Z]+");
+                                    if (!emailRegex.hasMatch(value)) {
+                                      return 'Please enter a valid email address.';
+                                    }
+                                    return null;
+                                  },
                                 ),
                               ),
                               Padding(
@@ -312,8 +326,7 @@ class _CreateWidgetState extends State<CreateWidget>
                                         letterSpacing: 0.0,
                                       ),
                                   validator: (value) {
-                                    if (value !=
-                                        _model.passwordTextController.text) {
+                                    if (value != _model.passwordTextController.text) {
                                       return 'Passwords don\'t match!';
                                     }
                                     return null;
@@ -338,22 +351,37 @@ class _CreateWidgetState extends State<CreateWidget>
                           if (!(_formKey.currentState?.validate() ?? false)) {
                             return;
                           }
-                          GoRouter.of(context).prepareAuthEvent();
-                          final user = await authManager.createAccountWithEmail(
-                            context,
-                            _model.emailAddressTextController.text,
-                            _model.passwordTextController.text,
-                          );
-                          if (user == null) {
-                            return;
+
+                          // --- MODIFIED: Added try...catch for error handling ---
+                          try {
+                            GoRouter.of(context).prepareAuthEvent();
+                            final user =
+                                await authManager.createAccountWithEmail(
+                              context,
+                              _model.emailAddressTextController.text,
+                              _model.passwordTextController.text,
+                              firstName: _model.firstNameTextController.text,
+                              lastName: _model.lastNameTextController.text,
+                            );
+
+                            if (user == null) {
+                              // This will be caught by the catch block below
+                              return;
+                            }
+                            if (!mounted) return;
+                            context.goNamedAuth('HomePage', context.mounted);
+                          } catch (e) {
+                            // Show a snackbar with the actual error message
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(e.toString()),
+                                  backgroundColor:
+                                      FlutterFlowTheme.of(context).error,
+                                ),
+                              );
+                            }
                           }
-                          await UsersTable().insert({
-                            'id': currentUserUid,
-                            'email': _model.emailAddressTextController.text,
-                            'first_name': _model.firstNameTextController.text,
-                            'last_name': _model.lastNameTextController.text,
-                          });
-                          context.goNamedAuth('HomePage', context.mounted);
                         },
                         text: 'Create Account',
                         options: FFButtonOptions(

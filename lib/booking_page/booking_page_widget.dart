@@ -1,4 +1,4 @@
-// COMPLETE AND FINAL CORRECTED FILE: lib/booking_page/booking_page_widget.dart
+// lib/booking_page/booking_page_widget.dart
 
 import 'package:flutter/material.dart';
 import 'package:maouidi/services/api_service.dart';
@@ -112,7 +112,8 @@ class _BookingPageWidgetState extends State<BookingPageWidget> {
     super.initState();
     _partnerDataFuture = Supabase.instance.client
         .from('medical_partners')
-        .select('booking_system_type, full_name, closed_days, category')
+        .select(
+            'booking_system_type, full_name, closed_days, category, working_hours')
         .eq('id', widget.partnerId)
         .maybeSingle();
   }
@@ -163,6 +164,8 @@ class _BookingPageWidgetState extends State<BookingPageWidget> {
             final closedDays = closedDaysRaw
                 .map((day) => DateTime.parse(day.toString()))
                 .toList();
+            final workingHours =
+                partnerData['working_hours'] as Map<String, dynamic>? ?? {};
 
             if (bookingType == 'number_based') {
               return _NumberQueueBookingView(
@@ -171,6 +174,7 @@ class _BookingPageWidgetState extends State<BookingPageWidget> {
                 partnerCategory: partnerCategory,
                 isPartnerBooking: widget.isPartnerBooking,
                 closedDays: closedDays,
+                workingHours: workingHours,
               );
             } else {
               return _TimeSlotBookingView(
@@ -186,17 +190,20 @@ class _BookingPageWidgetState extends State<BookingPageWidget> {
 }
 
 class _NumberQueueBookingView extends StatefulWidget {
-  const _NumberQueueBookingView(
-      {required this.partnerId,
-      required this.partnerName,
-      required this.isPartnerBooking,
-      required this.closedDays,
-      this.partnerCategory});
+  const _NumberQueueBookingView({
+    required this.partnerId,
+    required this.partnerName,
+    required this.isPartnerBooking,
+    required this.closedDays,
+    this.partnerCategory,
+    required this.workingHours,
+  });
   final String partnerId;
   final String partnerName;
   final bool isPartnerBooking;
   final List<DateTime> closedDays;
   final String? partnerCategory;
+  final Map<String, dynamic> workingHours;
 
   @override
   State<_NumberQueueBookingView> createState() =>
@@ -222,17 +229,13 @@ class __NumberQueueBookingViewState extends State<_NumberQueueBookingView> {
 
     setState(() => _isLoading = true);
     try {
-      // --- THIS IS THE FIX ---
-      // We now create an explicit UTC DateTime from the selected date's components.
       final appointmentDateUTC = DateTime.utc(
           _selectedDate.year, _selectedDate.month, _selectedDate.day);
-      // ---------------------
 
       await Supabase.instance.client.rpc(
         'book_appointment',
         params: {
           'partner_id_arg': widget.partnerId,
-          // MODIFIED: We now use our explicit UTC date.
           'appointment_time_arg': appointmentDateUTC.toIso8601String(),
           'on_behalf_of_name_arg': onBehalfOfName,
           'on_behalf_of_phone_arg': onBehalfOfPhone,
@@ -318,8 +321,16 @@ class __NumberQueueBookingViewState extends State<_NumberQueueBookingView> {
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
-    final isDateClosed =
+
+    final isDateInClosedDays =
         widget.closedDays.any((d) => isSameDay(d, _selectedDate));
+
+    final dayOfWeekKey = _selectedDate.weekday.toString();
+    final isWorkingDay = widget.workingHours.containsKey(dayOfWeekKey);
+
+    final bool isButtonDisabled =
+        _isLoading || isDateInClosedDays || !isWorkingDay;
+
     return Column(
       children: [
         Padding(
@@ -373,7 +384,7 @@ class __NumberQueueBookingViewState extends State<_NumberQueueBookingView> {
                   style: theme.bodyLarge,
                 ),
                 const Spacer(),
-                if (isDateClosed)
+                if (isDateInClosedDays)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16.0),
                     child: Text(
@@ -381,9 +392,18 @@ class __NumberQueueBookingViewState extends State<_NumberQueueBookingView> {
                       textAlign: TextAlign.center,
                       style: theme.bodyMedium.copyWith(color: theme.error),
                     ),
+                  )
+                else if (!isWorkingDay)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: Text(
+                      'This partner does not work on the selected day.',
+                      textAlign: TextAlign.center,
+                      style: theme.bodyMedium.copyWith(color: theme.error),
+                    ),
                   ),
                 FFButtonWidget(
-                  onPressed: _isLoading || isDateClosed
+                  onPressed: isButtonDisabled
                       ? null
                       : () async {
                           if (widget.isPartnerBooking) {
@@ -472,8 +492,14 @@ class __TimeSlotBookingViewState extends State<_TimeSlotBookingView> {
               partnerId: widget.partnerId,
               selectedDate: _selectedDate,
               isPartnerBooking: widget.isPartnerBooking,
-              onBookingComplete: () {
-                setState(() => _refreshCounter++);
+              // --- THE FIX: Add a short delay before refreshing the UI ---
+              onBookingComplete: () async {
+                // This delay gives the database time to commit the transaction
+                // before the UI asks for the new list of slots.
+                await Future.delayed(const Duration(milliseconds: 400));
+                if (mounted) {
+                  setState(() => _refreshCounter++);
+                }
               },
             ),
           ),
@@ -579,9 +605,6 @@ class _TimeSlotGridState extends State<_TimeSlotGrid> {
     );
   }
 
-  // ==================== START: LOGIC CHANGE ====================
-  // This function is now cleaned up. It no longer checks for Homecare
-  // and correctly passes all required parameters to the database function.
   Future<void> _bookAppointment(TimeSlot slot,
       {String? onBehalfOfName, String? onBehalfOfPhone}) async {
     showDialog(
@@ -598,21 +621,21 @@ class _TimeSlotGridState extends State<_TimeSlotGrid> {
           'on_behalf_of_name_arg': onBehalfOfName,
           'on_behalf_of_phone_arg': onBehalfOfPhone,
           'is_partner_override': widget.isPartnerBooking,
-          // This view is never used by Homecare, so we pass null.
           'case_description_arg': null,
           'patient_location_arg': null,
         },
       );
 
       if (!mounted) return;
-      Navigator.of(context).pop(); // Close loading dialog
+      Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Appointment booked successfully!'),
           backgroundColor: Colors.green));
+
       widget.onBookingComplete();
     } catch (e) {
       if (!mounted) return;
-      Navigator.of(context).pop(); // Close loading dialog
+      Navigator.of(context).pop();
       String errorMessage = 'Booking failed. Please try again.';
       if (e is PostgrestException && e.message.isNotEmpty) {
         errorMessage = e.message;
@@ -622,7 +645,6 @@ class _TimeSlotGridState extends State<_TimeSlotGrid> {
           backgroundColor: FlutterFlowTheme.of(context).error));
     }
   }
-  // ===================== END: LOGIC CHANGE =====================
 
   @override
   Widget build(BuildContext context) {

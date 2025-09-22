@@ -24,8 +24,6 @@ abstract class BaseAuthUser {
   bool get emailVerified;
   AuthUserInfo get authUserInfo;
 
-  Future<void> delete();
-  Future<void> updateEmail(String email);
   Future<void> updatePassword(String newPassword);
   Future<void> sendEmailVerification();
   Future<void> refreshUser();

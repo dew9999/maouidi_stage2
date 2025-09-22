@@ -34,14 +34,16 @@ class FFUploadedFile {
     final serializedData = jsonDecode(val) as Map<String, dynamic>;
     final data = {
       'name': serializedData['name'] ?? '',
-      'bytes': serializedData['bytes'] ?? Uint8List.fromList([]),
+      'bytes': serializedData['bytes'],
       'height': serializedData['height'],
       'width': serializedData['width'],
       'blurHash': serializedData['blurHash'],
     };
     return FFUploadedFile(
       name: data['name'] as String,
-      bytes: Uint8List.fromList(data['bytes'].cast<int>().toList()),
+      bytes: (data['bytes'] is List)
+          ? Uint8List.fromList(data['bytes'].cast<int>())
+          : null,
       height: data['height'] as double?,
       width: data['width'] as double?,
       blurHash: data['blurHash'] as String?,
